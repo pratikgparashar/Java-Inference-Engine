@@ -24,10 +24,11 @@ import static java.util.stream.Collectors.toCollection;
  *
  * @author prati
  */
-class KnowledgeBase{
+class KnowledgeBase implements Cloneable{
     ArrayList<Sentence> sentences = new ArrayList<>();
     Sentence query;
     LinkedHashMap<Sentence, ArrayList<Sentence>> solution_set = new LinkedHashMap<>();
+    boolean deived_sentence_equal_query = false;
     public void add_sentence(Sentence new_sentence){
         sentences.add(new_sentence);
     }
@@ -72,6 +73,39 @@ class KnowledgeBase{
             System.out.print(" ----> ");
             k.print();
         });
+    }
+    
+    @Override
+    public Object clone() throws CloneNotSupportedException
+    {
+        KnowledgeBase kb_new = new KnowledgeBase();
+        for(Sentence s : this.sentences){
+            Sentence new_sen = (Sentence)s.clone();
+            Sentence new_query = null;
+            if(new_sen.query){
+                new_query = new_sen;
+                kb_new.set_query(new_query);
+            }
+            kb_new.add_sentence(new_sen);
+        }
+        LinkedHashMap<Sentence, ArrayList<Sentence>> new_solution_set = new LinkedHashMap<>();
+        solution_set.forEach((k,v) -> {
+            ArrayList<Sentence> ar_s = new ArrayList<>();
+            for(Sentence s : v){
+                try {
+                    ar_s.add((Sentence)s.clone());
+                } catch (CloneNotSupportedException ex) {
+                    Logger.getLogger(KnowledgeBase.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            try {
+                new_solution_set.put((Sentence)k.clone(), ar_s);
+            } catch (CloneNotSupportedException ex) {
+                Logger.getLogger(KnowledgeBase.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        
+        return kb_new;
     }
 }
 
@@ -290,15 +324,19 @@ public class Homework4 {
             System.out.println("");
             Sentence negated_query = query.negate();
             negated_query.query = true;
-            KB.add_sentence(0,negated_query);
-            KB.set_query(negated_query);
+            KnowledgeBase new_KB = (KnowledgeBase)KB.clone();
+            new_KB.add_sentence(0,negated_query);
+            new_KB.set_query(negated_query);
 //            System.out.println(query.hashCode() + " " + negated_query.hashCode() );
             ResolutionSet RS = new ResolutionSet();
-            Boolean can_be_infered = resolveQuery(KB,RS);
-            KB.print();
+            Boolean can_be_infered = resolveQuery(new_KB,RS);
+            new_KB.print();
             System.out.println("Inference : ");
-            KB.print_inference();
+            new_KB.print_inference();
             result.append(can_be_infered);
+            if(can_be_infered){
+                KB.add_sentence(query);
+            }
             result.append("\n");
             System.out.println("RESOLVE ----------------END-------------------");
         }
@@ -313,6 +351,12 @@ public class Homework4 {
         System.out.println("CALLLLLLLLLLLLLLLLLLLLLLLLLLL TO RESOLVEEEEEE : "+ KB.hashCode());
         
         for(Sentence source : KB.sentences){
+//            if(!source.query){
+//                if(source.checkEquality(KB.query)){
+//                    KB.deived_sentence_equal_query = true;
+//                    return true;
+//                }
+//            }
             for(Sentence resolve_statement : KB.sentences){
                 if(source != resolve_statement){
                     if(source.negate().checkEquality(resolve_statement) && KB.query.used_for_resolution){
@@ -357,7 +401,11 @@ public class Homework4 {
                         source.used_for_resolution = true;
                         resolve_statement.used_for_resolution = true;
                         KB.add_inference_step(source, resolve_statement, derived_statement);
-                        if(derived_statement.predicate_list.isEmpty() && KB.query.used_for_resolution ){
+//                        if(derived_statement.checkEquality(KB.query)){
+//                            KB.deived_sentence_equal_query = true;
+//                            return false;
+//                        }
+                        if(derived_statement.predicate_list.isEmpty() && KB.query.used_for_resolution){
                             System.out.println("TRUE FROM EMPTY");
                             return true;
                         }
@@ -381,9 +429,16 @@ public class Homework4 {
 //                            RS = new ResolutionSet();
                             if(resolveQuery(new_kb, RS)){
                                 new_kb.print_inference();
+//                                KB = (KnowledgeBase)new_kb.clone();
+//                                KB.deived_sentence_equal_query = new_kb.deived_sentence_equal_query;
                                 System.out.println("TRUE FROM RECURSION");
+                                System.out.println("KB TO CALL  FROM RETURN :");
+                                new_kb.print();
                                 return true;
                             }else{
+//                                if(new_kb.deived_sentence_equal_query){
+//                                    return false;
+//                                }
                                 source.used_for_resolution = false;
                                 resolve_statement.used_for_resolution = false;
                                 KB.solution_set.remove(derived_statement);
@@ -392,6 +447,7 @@ public class Homework4 {
                     }
                 }
             }
+            return false;
         }
         System.out.println("FALSE FROM ENDDDDDDDDDD");
         return false;
