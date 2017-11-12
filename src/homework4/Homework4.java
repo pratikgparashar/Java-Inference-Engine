@@ -374,11 +374,11 @@ public class Homework4 {
             for(Sentence resolve_statement : KB.sentences){
                 if(source != resolve_statement){
                     if(source.negate().checkEquality(resolve_statement) && KB.query.used_for_resolution){
-//                        RS = new ResolutionSet();
-//                        Sentence derived_statement = canBeResolved(source, resolve_statement, RS);
-//                        if(source == derived_statement){
-//                            return false;
-//                        }
+                        RS = new ResolutionSet();
+                        Sentence derived_statement = canBeResolved(source, resolve_statement, RS);
+                        if(source == derived_statement){
+                            return false;
+                        }
                         System.out.println("TRUE FROM EQUALITY");
                         source.print();
                         resolve_statement.print();
@@ -479,7 +479,8 @@ public class Homework4 {
         Predicate pre_to_remove = null;
         Predicate pre_to_remove_res = null;
         final Predicate pred_r, pred_re_s;
-        boolean all_var = false;
+//        int var_count_s_p  = 0;
+        int var_count_r_s  = 0;
         for(Predicate s_p : source.predicate_list.values()){
             if(resolve_statement.predicate_list.containsKey(s_p.negated_print_name())){
                 pre_to_remove = source.predicate_list.get(s_p.print_name);
@@ -504,11 +505,13 @@ public class Homework4 {
                     {
                         return source;
                     }
-//                    if((r_s_arg.getClass().getName().equals("homework4.Variable")) && (s_p_arg.getClass().equals(r_s_arg.getClass()))){
-//                        all_var = true;
-//                    }
-//                    else 
-                    if((!s_p_arg.getClass().equals(r_s_arg.getClass()))||( s_p_arg.name.equals(r_s_arg.name))){
+                    if((r_s_arg.getClass().getName().equals("homework4.Variable")) && (s_p_arg.getClass().equals(r_s_arg.getClass()))){ 
+                        var_count_r_s += 1;
+                        if(( !s_p_arg.name.equals(r_s_arg.name))){
+                            RS.resolution_set.put(s_p_arg.name, r_s_arg);
+                        }
+                    }
+                    else if((!s_p_arg.getClass().equals(r_s_arg.getClass()))||( s_p_arg.name.equals(r_s_arg.name))){
                         String key = r_s_arg.getClass().getName().equals("homework4.Variable") ? r_s_arg.name : s_p_arg.name;
                         Argument value = r_s_arg.getClass().getName().equals("homework4.Constant") ? r_s_arg : s_p_arg;
                         
@@ -523,6 +526,9 @@ public class Homework4 {
                     
                 }
                 
+                if(var_count_r_s == pre_to_remove_res.arguments.size()){
+                    return source;
+                }
             }
         }
         pred_r = pre_to_remove;
