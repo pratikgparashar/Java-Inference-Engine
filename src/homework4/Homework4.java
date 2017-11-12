@@ -49,7 +49,7 @@ class KnowledgeBase implements Cloneable{
 //                System.out.print(entry.getKey());
                 System.out.print(entry.getKey());
                 entry.getValue().print_args();
-                
+                System.out.print(entry.getValue().const_arg_num_resolved);
                 if(entries.hasNext())
                     System.out.print(" | ");
             }
@@ -146,6 +146,7 @@ class Sentence implements Cloneable{
 //                entry.getValue().print_args();
             System.out.print(entry.getKey());
             entry.getValue().print_args();
+            System.out.print(entry.getValue().const_arg_num_resolved);
             if(entries.hasNext())
                 System.out.print(" | ");
         }
@@ -189,13 +190,20 @@ class Sentence implements Cloneable{
 class Predicate implements Cloneable{
     boolean not_operator;
     String name;
-    ArrayList<Argument> arguments; 
+    ArrayList<Argument> arguments;
+    int const_arg_num_resolved;
+    ArrayList<Argument> subtstitute_arguments;
     String print_name;
-    public Predicate(String given_name, boolean is_not, ArrayList<Argument> argument_list){
+    public Predicate(String given_name, boolean is_not, ArrayList<Argument> argument_list) throws CloneNotSupportedException{
         not_operator = is_not;
         name = given_name;
         arguments = new ArrayList<>(argument_list);
+        subtstitute_arguments = new ArrayList<>();
+        for(Argument a : argument_list){
+            subtstitute_arguments.add((Argument)a.clone());
+        }
         print_name = this.print_name();
+        const_arg_num_resolved = 0;
     }
     public String print_name(){
         StringBuilder sb = new StringBuilder("");
@@ -236,6 +244,12 @@ class Predicate implements Cloneable{
             args_new.add((Argument)a.clone());
         }
         pr_new.arguments = args_new;
+        
+        ArrayList<Argument> args_subst_new = new ArrayList<>();
+        for(Argument a : pr_new.subtstitute_arguments){
+            args_subst_new.add((Argument)a.clone());
+        }
+        pr_new.subtstitute_arguments = args_subst_new;
 //        pr_new.arguments = (ArrayList<Argument>) arguments.clone();
 //        System.out.println("ARGS"+ pr_new.arguments.get(0).hashCode() +" " + arguments.get(0).hashCode() );
         return pr_new;
@@ -360,6 +374,11 @@ public class Homework4 {
             for(Sentence resolve_statement : KB.sentences){
                 if(source != resolve_statement){
                     if(source.negate().checkEquality(resolve_statement) && KB.query.used_for_resolution){
+//                        RS = new ResolutionSet();
+//                        Sentence derived_statement = canBeResolved(source, resolve_statement, RS);
+//                        if(source == derived_statement){
+//                            return false;
+//                        }
                         System.out.println("TRUE FROM EQUALITY");
                         source.print();
                         resolve_statement.print();
@@ -432,8 +451,8 @@ public class Homework4 {
 //                                KB = (KnowledgeBase)new_kb.clone();
 //                                KB.deived_sentence_equal_query = new_kb.deived_sentence_equal_query;
                                 System.out.println("TRUE FROM RECURSION");
-                                System.out.println("KB TO CALL  FROM RETURN :");
-                                new_kb.print();
+//                                System.out.println("KB TO CALL  FROM RETURN :");
+//                                new_kb.print();
                                 return true;
                             }else{
 //                                if(new_kb.deived_sentence_equal_query){
@@ -460,7 +479,7 @@ public class Homework4 {
         Predicate pre_to_remove = null;
         Predicate pre_to_remove_res = null;
         final Predicate pred_r, pred_re_s;
-        
+        boolean all_var = false;
         for(Predicate s_p : source.predicate_list.values()){
             if(resolve_statement.predicate_list.containsKey(s_p.negated_print_name())){
                 pre_to_remove = source.predicate_list.get(s_p.print_name);
@@ -481,9 +500,14 @@ public class Homework4 {
                 for(int i = 0; i < s_p.arguments.size(); i++){
                     Argument s_p_arg = s_p.arguments.get(i); 
                     Argument r_s_arg = resolve_statement.predicate_list.get(s_p.negated_print_name()).arguments.get(i); 
-                    if((r_s_arg.getClass().getName().equals("homework4.Constant") && (s_p_arg.getClass().equals(r_s_arg.getClass())) && (!s_p_arg.name.equals(r_s_arg.name)))){
+                    if((r_s_arg.getClass().getName().equals("homework4.Constant")) && (s_p_arg.getClass().equals(r_s_arg.getClass())) && (!s_p_arg.name.equals(r_s_arg.name)))
+                    {
                         return source;
                     }
+//                    if((r_s_arg.getClass().getName().equals("homework4.Variable")) && (s_p_arg.getClass().equals(r_s_arg.getClass()))){
+//                        all_var = true;
+//                    }
+//                    else 
                     if((!s_p_arg.getClass().equals(r_s_arg.getClass()))||( s_p_arg.name.equals(r_s_arg.name))){
                         String key = r_s_arg.getClass().getName().equals("homework4.Variable") ? r_s_arg.name : s_p_arg.name;
                         Argument value = r_s_arg.getClass().getName().equals("homework4.Constant") ? r_s_arg : s_p_arg;
@@ -535,30 +559,35 @@ public class Homework4 {
             });
             
             
-//            source.predicate_list.forEach((k,v) -> {
-//                ArrayList<Argument> new_args =  new ArrayList<>();
-//                v.arguments.forEach((arg) -> {
-//                    if(RS.resolution_set.containsKey(arg.name)){
-//                        new_args.add(RS.resolution_set.get(arg.name));
-//                    }
-//                    else{
-//                        new_args.add(arg);
-//                    }
-//                });
-//                v.arguments = new_args;
-//            });
-//            resolve_statement.predicate_list.forEach((k,v) -> {
-//                ArrayList<Argument> new_args =  new ArrayList<>();
-//                v.arguments.forEach((arg) -> {
-//                    if(RS.resolution_set.containsKey(arg.name)){
-//                        new_args.add(RS.resolution_set.get(arg.name));
-//                    }
-//                    else{
-//                        new_args.add(arg);
-//                    }
-//                });
-//                v.arguments = new_args;
-//            });
+            source.predicate_list.forEach((k,v) -> {
+                v.arguments.forEach((arg) -> {
+                    if(RS.resolution_set.containsKey(arg.name)){
+                       Argument ar = RS.resolution_set.get(arg.name);
+                       if(ar.getClass().getName().equals("homework4.Constant")){
+                           v.const_arg_num_resolved += 1; 
+                       }else{
+                           if(arg.getClass().getName().equals("homework4.Constant")){
+                               v.const_arg_num_resolved += 1;
+                           }
+                       }
+                    }
+                });
+            });
+            resolve_statement.predicate_list.forEach((k,v) -> {
+                v.arguments.forEach((arg) -> {
+                    if(RS.resolution_set.containsKey(arg.name)){
+                        Argument ar = RS.resolution_set.get(arg.name);
+                       if(ar.getClass().getName().equals("homework4.Constant")){
+                           v.const_arg_num_resolved += 1; 
+                       }else{
+                           if(arg.getClass().getName().equals("homework4.Constant")){
+                               v.const_arg_num_resolved += 1;
+                           }
+                       }
+                       
+                    }
+                });
+            });
 
 
             System.out.println("NEW SENTENCE : " );
@@ -572,7 +601,7 @@ public class Homework4 {
         }
     }
     
-    public static Sentence add_sentences_to_database(String input_line, HashMap<String, Argument> argument_table){
+    public static Sentence add_sentences_to_database(String input_line, HashMap<String, Argument> argument_table) throws CloneNotSupportedException{
         String query = input_line;
         String[] atomic_sentences = query.split("\\|");
         Sentence new_sentence = new Sentence();
@@ -621,11 +650,15 @@ public class Homework4 {
                 Iterator<HashMap.Entry<String, Predicate>> entries = s.predicate_list.entrySet().iterator();
                 while (entries.hasNext()) {
                     HashMap.Entry<String, Predicate> entry = entries.next();
-                    for(Argument a : entry.getValue().arguments){
-                        if(!a.getClass().getName().equals("homework4.Constant")){
-                            return false;
-                        }
-                    }
+//                    for(Argument a : entry.getValue().subtstitute_arguments){
+//                        if(!a.getClass().getName().equals("homework4.Constant")){
+//                            System.out.println("NOT CONSTANT : " + a.name);
+//                            return false;
+//                        }
+//                    }
+//                    if(entry.getValue().arguments.size() != entry.getValue().const_arg_num_resolved){
+//                        return false;
+//                    }
                 }
             }
         }
