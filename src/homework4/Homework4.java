@@ -492,6 +492,7 @@ public class Homework4 {
                     for(int j = i + 1; j < s_p.arguments.size(); j++){
                         Argument r_s_arg = resolve_statement.predicate_list.get(s_p.negated_print_name()).arguments.get(j); 
                         if(s_p_arg.name.equals(r_s_arg.name)){
+                            System.out.println(" FALSEEEE NOT RESOLVE FROM AHEAD");
                             return source;
                         }
                     }
@@ -501,15 +502,22 @@ public class Homework4 {
                 for(int i = 0; i < s_p.arguments.size(); i++){
                     Argument s_p_arg = s_p.arguments.get(i); 
                     Argument r_s_arg = resolve_statement.predicate_list.get(s_p.negated_print_name()).arguments.get(i); 
+                    
+                    // FALSE FOR BOTH CONSTANTS IF DIFFRENT
                     if((r_s_arg.getClass().getName().equals("homework4.Constant")) && (s_p_arg.getClass().equals(r_s_arg.getClass())) && (!s_p_arg.name.equals(r_s_arg.name)))
                     {
                         return source;
                     }
-                    if((r_s_arg.getClass().getName().equals("homework4.Variable")) && (s_p_arg.getClass().equals(r_s_arg.getClass()))){ 
-                        var_count_r_s += 1;
-                        if(( !s_p_arg.name.equals(r_s_arg.name))){
+                    
+                   //BOTH ARE VARIABLES AND  
+                    if((r_s_arg.getClass().getName().equals("homework4.Variable")) && 
+                       (s_p_arg.getClass().equals(r_s_arg.getClass()))){ 
+//                        var_count_r_s += 1;
+//                        if(true || ( !s_p_arg.name.equals(r_s_arg.name)))
+//                        {
                             RS.resolution_set.put(s_p_arg.name, r_s_arg);
-                        }
+                            resolved = true;
+//                        }
                     }
                     else if((!s_p_arg.getClass().equals(r_s_arg.getClass()))||( s_p_arg.name.equals(r_s_arg.name))){
                         String key = r_s_arg.getClass().getName().equals("homework4.Variable") ? r_s_arg.name : s_p_arg.name;
@@ -526,9 +534,9 @@ public class Homework4 {
                     
                 }
                 
-                if(var_count_r_s == pre_to_remove_res.arguments.size()){
-                    return source;
-                }
+//                if(var_count_r_s == pre_to_remove_res.arguments.size()){
+//                    return source;
+//                }
             }
         }
         pred_r = pre_to_remove;
@@ -603,6 +611,7 @@ public class Homework4 {
             return new_sentence;
         }
         else{
+            System.out.println("RETURNNNNNN FALSEEEEEEEEEEEEEEEEEE");
             return source;
         }
     }
