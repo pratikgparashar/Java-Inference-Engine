@@ -3,16 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
-/**
- *
- * @author pratik
- */
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 //package homework4;
 
 import java.beans.Statement;
@@ -24,7 +14,6 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -180,7 +169,7 @@ class Sentence implements Cloneable{
             for(int j = 0; j< new_pred.arguments.size();j++){
 //                System.out.println(new_pred.arguments.get(j).name);
 //                System.out.println(new_pred_target.arguments.get(j).name);
-                if( new_pred.arguments.get(j).getClass().getName().equals("homework4.Constant") && !new_pred.arguments.get(j).name.equals(new_pred_target.arguments.get(j).name)){
+                if( new_pred.arguments.get(j).getClass().getName().equals("Constant") && !new_pred.arguments.get(j).name.equals(new_pred_target.arguments.get(j).name)){
                     
                     return false;
                     
@@ -339,13 +328,14 @@ public class homework {
             new_sentence = add_sentences_to_database(facts,argument_table);
             KB.add_sentence(new_sentence);
         }
-        KB.print();
+//        KB.print();
 //        QB.print();
         StringBuilder result = new StringBuilder("");
-        for(Sentence query : QB.sentences){
-            System.out.println("RESOLVE ----------------------------------- FOR : ");
-            query.print();
-            System.out.println("");
+        for(int i =0 ; i< QB.sentences.size();i++ ){
+            Sentence query = QB.sentences.get(i);
+//            System.out.println("RESOLVE ----------------------------------- FOR : ");
+//            query.print();
+//            System.out.println("");
             Sentence negated_query = query.negate();
             negated_query.query = true;
             KnowledgeBase new_KB = (KnowledgeBase)KB.clone();
@@ -353,46 +343,45 @@ public class homework {
             new_KB.set_query(negated_query);
             ResolutionSet RS = new ResolutionSet();
             Boolean can_be_infered = resolveQuery(new_KB,RS);
-            new_KB.print();
-            System.out.println("Inference : ");
-            new_KB.print_inference();
+//            new_KB.print();
+//            System.out.println("Inference : ");
+//            new_KB.print_inference();
             result.append(can_be_infered.toString().toUpperCase());
-            if(can_be_infered){
-                KB.add_sentence(query);
-            }
-            result.append("\n");
-            System.out.println("RESOLVE ----------------END-------------------");
+            if(i != QB.sentences.size() - 1){
+                result.append("\n");
+            }    
+//            System.out.println("RESOLVE ----------------END-------------------");
         }
+//        System.out.println("RESULTSSSSSS : ");
+//        System.out.println(result);
         print_sol(result);
-        System.out.println("RESULTSSSSSS : ");
-        System.out.println(result);
 //        KB.print();
 //        argument_table.forEach((k,v) -> System.out.println(k));
     }
     
     public static boolean resolveQuery(KnowledgeBase KB, ResolutionSet RS) throws ClassNotFoundException, CloneNotSupportedException{
 //        if there exists some false or sentences checked or some negations
-        for(int i =0 ;i< KB.sentences.size();i++){
-            Sentence source = KB.sentences.get(i);
-            for(int j = i+1;j< KB.sentences.size();j++){
-                Sentence resolve_statement = KB.sentences.get(j);
-                if(source != resolve_statement){
-                    if(source.negate().checkEquality(resolve_statement) && KB.query.used_for_resolution){
-                        RS = new ResolutionSet();
-                        Sentence derived_statement = canBeResolved(source, resolve_statement, RS);
-                        if(source == derived_statement){
-                            return false;
-                        }
-                        System.out.println("TRUE FROM EQUALITY");
-                        source.print();
-                        resolve_statement.print();
-                        
-                        KB.print_inference();
-                        return true;
-                    }
-                }
-            }
-        }
+//        for(int i =0 ;i< KB.sentences.size();i++){
+//            Sentence source = KB.sentences.get(i);
+//            for(int j = i+1;j< KB.sentences.size();j++){
+//                Sentence resolve_statement = KB.sentences.get(j);
+//                if(source != resolve_statement){
+//                    if(source.negate().checkEquality(resolve_statement) && KB.query.used_for_resolution){
+//                        RS = new ResolutionSet();
+//                        Sentence derived_statement = canBeResolved(source, resolve_statement, RS);
+//                        if(source == derived_statement){
+//                            return false;
+//                        }
+//                        System.out.println("TRUE FROM EQUALITY");
+//                        source.print();
+//                        resolve_statement.print();
+//                        
+//                        KB.print_inference();
+//                        return true;
+//                    }
+//                }
+//            }
+//        }
         
         
         for(int i =0 ;i< KB.sentences.size();i++){
@@ -413,19 +402,19 @@ public class homework {
                         KB.add_inference_step(source, resolve_statement, derived_statement);
 
                         if(derived_statement.predicate_list.isEmpty() && KB.query.used_for_resolution){
-                            System.out.println("TRUE FROM EMPTY");
+//                            System.out.println("TRUE FROM EMPTY");
                             return true;
                         }
                         else{
                             KnowledgeBase new_kb = (KnowledgeBase)KB.clone();
                             new_kb.add_sentence(0,derived_statement);
                             
-                            System.out.println("KB TO CALL :");
-                            new_kb.print();
+//                            System.out.println("KB TO CALL :");
+//                            new_kb.print();
                             
                             if(resolveQuery(new_kb, RS)){
-                                new_kb.print_inference();
-                                System.out.println("TRUE FROM RECURSION");
+//                                new_kb.print_inference();
+//                                System.out.println("TRUE FROM RECURSION");
                                 return true;
                             }
                             else{
@@ -439,7 +428,7 @@ public class homework {
             }
             return false;
         }
-        System.out.println("FALSE FROM ENDDDDDDDDDD");
+//        System.out.println("FALSE FROM ENDDDDDDDDDD");
         return false;
     }
     
@@ -462,7 +451,7 @@ public class homework {
                     for(int j = i + 1; j < s_p.arguments.size(); j++){
                         Argument r_s_arg = pre_to_remove_res.arguments.get(j); 
                         if(s_p_arg.name.equals(r_s_arg.name)){
-                            System.out.println(" FALSEEEE NOT RESOLVE FROM AHEAD");
+//                            System.out.println(" FALSEEEE NOT RESOLVE FROM AHEAD");
                             return source;
                         }
                     }
@@ -490,11 +479,15 @@ public class homework {
                         String key = r_s_arg_class_name.equals("Variable") ? r_s_arg.name : s_p_arg.name;
                         Argument value = r_s_arg_class_name.equals("Constant") ? r_s_arg : s_p_arg;
                         
-                        source.print() ;
-                        System.out.print("  CAN BE RESOLVED WITH : FOR " + s_p_arg.name + " & " + r_s_arg.name); 
-                        resolve_statement.print();
-                        System.out.println("");
-
+//                        source.print() ;
+//                        System.out.print("  CAN BE RESOLVED WITH : FOR " + s_p_arg.name + " & " + r_s_arg.name); 
+//                        resolve_statement.print();
+//                        System.out.println("");
+                        if(RS.resolution_set.containsKey(key)){
+                            if(RS.resolution_set.get(key) != value){
+                                return source;
+                            }
+                        }
                         RS.resolution_set.put(key, value);
                         resolved = true;
                     }
@@ -567,14 +560,14 @@ public class homework {
 //            });
 
 
-            System.out.println("NEW SENTENCE : " );
-            new_sentence.print();
-            System.out.println("");
-            System.out.println("-----------------------");
+//            System.out.println("NEW SENTENCE : " );
+//            new_sentence.print();
+//            System.out.println("");
+//            System.out.println("-----------------------");
             return new_sentence;
         }
         else{
-            System.out.println("RETURNNNNNN FALSEEEEEEEEEEEEEEEEEE");
+//            System.out.println("RETURNNNNNN FALSEEEEEEEEEEEEEEEEEE");
             return source;
         }
     }
@@ -649,5 +642,4 @@ public class homework {
         file_write.print(sb);
         file_write.close();
     }
-    
 }
